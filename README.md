@@ -10,23 +10,27 @@ A modern, high-performance, enterprise-grade multi-tenant e-commerce marketplace
 
 Designed specifically for multi-store retail ecosystems, subscription SaaS billing, cashier POS registers with 80mm thermal receipt printing, interactive Mapbox delivery geolocation, and localized Ethiopian payment methods (Telebirr, CBE Birr, Chapa, and Bank Screenshot proof).
 
+## 📸 Screenshots
+
+### 🏨 Public Landing Page
+![Landing Page](public/screenshots/landing-page.png)
+
+### 🖥️ Admin Dashboard
+![Admin Dashboard](public/screenshots/admin-dashboard.png)
+
+### 🖥️ Customer Dashboard
+![Customer Dashboard](public/screenshots/customer-dashboard.png)
+
+### 🛎️ Chatting Page
+![Chatting Page](public/screenshots/chatting-page.png)
+
+### 📱 Store Owner Dashboard
+![Store Owner Dashboard](public/screenshots/store-owner-dashboard.png)
+
+### 📱 POS Page
+![POS Page](public/screenshots/POS-page.png)
 ---
 
-## 📸 Screenshots Showcase
-
-| 🏪 Storefront & Marketplace | 🗺️ Interactive Mapbox Delivery Picker |
-|:---:|:---:|
-
-
-| 💼 Merchant Dashboard & Staff Management | 📠 Point of Sale (POS) & Thermal Receipt |
-|:---:|:---:|
-
-
-| 💬 Real-Time Live Chat Drawer | 🛡️ Platform Super Admin Center |
-|:---:|:---:|
-
-
----
 
 ## 🔗 Backend Engine Repository
 
