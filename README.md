@@ -16,21 +16,23 @@ Designed specifically for multi-store retail ecosystems, subscription SaaS billi
 
 ## 📸 Screenshots Showcase
 
-<!-- ================================================================= -->
-<!-- PLACEHOLDER FOR SCREENSHOTS - REPLACE IMAGE LINKS WITH YOUR OWN  -->
-<!-- ================================================================= -->
+### Landing Page
+![Landing Page](public/screenshots/landing-page.png)
 
-| 🏪 Storefront & Marketplace | 🗺️ Interactive Mapbox Delivery Picker |
-|:---:|:---:|
-| ![Storefront Screenshot](https://via.placeholder.com/600x340/0f172a/f8fafc?text=Storefront+%26+Catalog) | ![Mapbox Location Picker](https://via.placeholder.com/600x340/0f172a/f8fafc?text=Mapbox+Delivery+Location+Picker) |
+### Admin Dashboard
+![Admin Dashboard](public/screenshots/admin-dashboard.png)
 
-| 💼 Merchant Dashboard & Staff Management | 📠 Point of Sale (POS) & Thermal Receipt |
-|:---:|:---:|
-| ![Merchant Staff Management](https://via.placeholder.com/600x340/0f172a/f8fafc?text=Merchant+Staff+Control+Center) | ![POS Register](https://via.placeholder.com/600x340/0f172a/f8fafc?text=Point+of+Sale+(POS)+Terminal) |
+### Chatting Page
+![Chatting Page](public/screenshots/chatting-page.png)
 
-| 💬 Real-Time Live Chat Drawer | 🛡️ Platform Super Admin Center |
-|:---:|:---:|
-| ![Live Chat Drawer](https://via.placeholder.com/600x340/0f172a/f8fafc?text=Real-Time+Customer+Chat) | ![Superadmin Dashboard](https://via.placeholder.com/600x340/0f172a/f8fafc?text=Super+Admin+Verifications) |
+### Customer Dashboard
+![Customer Dashboard](public/screenshots/customer-dashboard.png)
+
+### POS page
+![POS page](public/screenshots/POS-page.png)
+
+### Store Owner Dashboard
+![Store Owner Dashboard](public/screenshots/store-owner-dashboard.png)
 
 ---
 
@@ -327,7 +329,7 @@ MAPBOX_GEOCODING_URL=https://api.mapbox.com/geocoding/v5/mapbox.places
 CHAPA_KEY=CHAPUBK_TEST-xxxxxx
 
 # Frontend application root URL
-NEXT_APP_URL=http://localhost:3000
+NEXT_APP_URL=http://localhost:3003
 
 # Node environment mode
 NODE_ENV=development
@@ -358,7 +360,7 @@ pnpm run dev
 ```
 Open your browser and navigate to:
 ```text
-http://localhost:3000
+http://localhost:3003
 ```
 
 ### Step 5: Build & Run for Production Locally
