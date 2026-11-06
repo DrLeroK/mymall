@@ -1,0 +1,23 @@
+{
+  "name": "MyMall - Multi-Tenant E-Commerce & POS",
+  "short_name": "MyMall",
+  "description": "Multi-Tenant E-Commerce Platform & Point of Sale for Ethiopian retail.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090e17",
+  "theme_color": "#0e7490",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

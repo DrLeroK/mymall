@@ -1,6 +1,6 @@
 export type Role = 'SUPER_ADMIN' | 'STORE_OWNER' | 'STORE_STAFF' | 'CUSTOMER';
 
-export type StaffRole = 'MANAGER' | 'CASHIER' | 'INVENTORY_CLERK';
+export type StaffRole = 'MANAGER' | 'CASHIER' | 'INVENTORY_CLERK' | 'ACCOUNTANT';
 
 export type StoreStatus = 'PENDING_APPROVAL' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED' | 'INACTIVE';
 
@@ -30,6 +30,14 @@ export type DisputeType = 'ORDER_ISSUE' | 'PAYMENT_DISPUTE' | 'STORE_POLICY' | '
 
 export type ConversationType = 'ADMIN_STORE' | 'STORE_CUSTOMER' | 'ADMIN_CUSTOMER' | 'DISPUTE';
 
+export interface AvailableStoreContext {
+  storeId: number;
+  storeName: string;
+  slug: string;
+  role: string;
+  permissions?: string[];
+}
+
 export interface User {
   id: number;
   email: string;
@@ -39,6 +47,8 @@ export interface User {
   staffRole?: StaffRole | null;
   avatarUrl?: string | null;
   storeId?: number | null;
+  permissions?: string[];
+  availableStores?: AvailableStoreContext[];
   isEmailVerified: boolean;
   ownedStores?: Store[];
   assignedStore?: Store | null;
@@ -123,6 +133,7 @@ export interface ProductCategory {
   description?: string | null;
   imageUrl?: string | null;
   products?: Product[];
+  _count?: { products: number };
 }
 
 export interface ProductVariant {
@@ -143,6 +154,7 @@ export interface Product {
   categoryId?: number | null;
   category?: ProductCategory | null;
   name: string;
+  brand?: string | null;
   slug: string;
   description?: string | null;
   sku?: string | null;
@@ -155,6 +167,7 @@ export interface Product {
   unit: string;
   images: string; // JSON array of string URLs
   isActive: boolean;
+  isOnlineVisible?: boolean;
   hasVariants: boolean;
   variants?: ProductVariant[];
   reviews?: Review[];

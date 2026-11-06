@@ -1,10 +1,13 @@
 /** @type {import('next').NextConfig} */
 
+const rawApiUrl =
+  process.env.BACK_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:5001/api/v1';
+
 const backendOrigin =
   process.env.INTERNAL_BACKEND_URL ||
-  (process.env.NEXT_PUBLIC_API_URL
-    ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, '')
-    : 'http://localhost:5001');
+  rawApiUrl.replace(/\/api\/v1\/?$/, '');
 
 const securityHeaders = [
   {
@@ -40,6 +43,19 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: false,
   poweredByHeader: false, // Prevents server fingerprinting
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? true : false,
+  },
+  env: {
+    BACK_API_URL: process.env.BACK_API_URL || process.env.NEXT_PUBLIC_API_URL,
+    BACK_SOCKET_URL: process.env.BACK_SOCKET_URL || process.env.NEXT_PUBLIC_SOCKET_URL,
+    BACK_UPLOADS_URL: process.env.BACK_UPLOADS_URL || process.env.NEXT_PUBLIC_UPLOADS_URL,
+    DEFAULT_STORE_SLUG: process.env.DEFAULT_STORE_SLUG || process.env.NEXT_PUBLIC_DEFAULT_STORE_SLUG,
+    MAPBOX_TOKEN: process.env.MAPBOX_TOKEN || process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
+    MAPBOX_GEOCODING_URL: process.env.MAPBOX_GEOCODING_URL || process.env.NEXT_PUBLIC_MAPBOX_GEOCODING_URL || 'https://api.mapbox.com/geocoding/v5/mapbox.places',
+    CHAPA_KEY: process.env.CHAPA_KEY || process.env.NEXT_PUBLIC_CHAPA_KEY,
+    NEXT_APP_URL: process.env.NEXT_APP_URL || process.env.NEXT_PUBLIC_APP_URL,
+  },
   headers: async () => [
     {
       source: '/:path*',
@@ -51,6 +67,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'http', hostname: 'localhost' },
       { protocol: 'http', hostname: '127.0.0.1' },
+      // { protocol: 'http', hostname: '10.124.107.203' },
       { protocol: 'https', hostname: '**' },
     ],
   },

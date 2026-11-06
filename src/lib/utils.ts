@@ -52,6 +52,7 @@ export function getImageUrl(imagePath?: any): string {
     pathStr = String(imagePath || '');
   }
 
+  pathStr = pathStr.trim();
   if (!pathStr || pathStr === 'undefined' || pathStr === 'null') {
     return fallback;
   }
@@ -60,23 +61,37 @@ export function getImageUrl(imagePath?: any): string {
     return pathStr;
   }
 
-  const cleanPath = pathStr.replace(/^\/?uploads\//, '');
-  if (process.env.NEXT_PUBLIC_UPLOADS_URL) {
-    const base = process.env.NEXT_PUBLIC_UPLOADS_URL.replace(/\/+$/, '');
+  const cleanPath = pathStr.replace(/^\/?uploads\//, '').replace(/^\/?backend-uploads\//, '');
+  const uploadsUrl = process.env.BACK_UPLOADS_URL || process.env.NEXT_PUBLIC_UPLOADS_URL;
+  if (uploadsUrl) {
+    const base = uploadsUrl.replace(/\/+$/, '');
     return `${base}/${cleanPath}`;
   }
   return `/backend-uploads/${cleanPath}`;
 }
 
-export function parseImages(imagesJson?: string | null): string[] {
-  if (!imagesJson) return [];
-  try {
-    const parsed = JSON.parse(imagesJson);
-    if (Array.isArray(parsed)) return parsed;
-  } catch {
-    // If it's a single URL string
-    if (typeof imagesJson === 'string' && imagesJson.trim().length > 0) {
-      return [imagesJson.trim()];
+export function parseImages(imagesInput?: any): string[] {
+  if (!imagesInput) return [];
+  if (Array.isArray(imagesInput)) {
+    return imagesInput
+      .map((img) => (typeof img === 'string' ? img.trim() : String(img || '')))
+      .filter((img) => img.length > 0 && img !== 'undefined' && img !== 'null');
+  }
+  if (typeof imagesInput === 'string') {
+    const trimmed = imagesInput.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((img) => (typeof img === 'string' ? img.trim() : String(img || '')))
+          .filter((img) => img.length > 0 && img !== 'undefined' && img !== 'null');
+      }
+      if (typeof parsed === 'string' && parsed.trim()) {
+        return [parsed.trim()];
+      }
+    } catch {
+      return [trimmed];
     }
   }
   return [];

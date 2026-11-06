@@ -1,0 +1,41 @@
+name: MyMall Frontend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Typecheck
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: production
+      BACK_API_URL: https://api.mymall.local/api/v1
+      BACK_SOCKET_URL: https://api.mymall.local
+      BACK_UPLOADS_URL: https://api.mymall.local/uploads
+      DEFAULT_STORE_SLUG: urbantrend
+      MAPBOX_TOKEN: pk.placeholder
+      MAPBOX_GEOCODING_URL: https://api.mapbox.com/geocoding/v5/mapbox.places
+      CHAPA_KEY: CHAPUBK_TEST-placeholder
+      NEXT_APP_URL: https://mymall.vercel.app
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Next.js Production Build
+        run: npm run build

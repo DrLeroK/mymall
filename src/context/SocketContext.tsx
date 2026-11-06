@@ -18,6 +18,8 @@ interface SocketContextType {
   isConnected: boolean;
   notifications: SocketNotification[];
   clearNotifications: () => void;
+  latestPopup: SocketNotification | null;
+  clearLatestPopup: () => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -27,12 +29,13 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [notifications, setNotifications] = useState<SocketNotification[]>([]);
+  const [latestPopup, setLatestPopup] = useState<SocketNotification | null>(null);
 
   // Load existing notifications from backend on authentication
   useEffect(() => {
     if (!user?.id) return;
 
-    ApiClient.get('/notifications')
+    ApiClient.get('/notifications?unreadOnly=true')
       .then((res) => {
         if (res.success && Array.isArray(res.alerts)) {
           const mapped: SocketNotification[] = res.alerts.map((a: any) => ({
@@ -59,14 +62,13 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Dynamically resolve socket URL from environment variable or port 5001 fallback
     const socketUrl =
+      process.env.BACK_SOCKET_URL ||
       process.env.NEXT_PUBLIC_SOCKET_URL ||
       (typeof window !== 'undefined'
         ? window.location.port === '3000'
           ? `${window.location.protocol}//${window.location.hostname}:5001`
           : window.location.origin
         : 'http://localhost:5001');
-
-    console.log(`🔌 Initializing Socket.io connection to: ${socketUrl}`);
 
     const socketInstance = io(socketUrl, {
       transports: ['websocket', 'polling'],
@@ -76,7 +78,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     socketInstance.on('connect', () => {
       setIsConnected(true);
-      console.log('⚡ Connected to MyMall real-time socket:', socketInstance.id);
 
       // Join rooms according to user role
       if (role === 'SUPER_ADMIN') {
@@ -206,6 +207,22 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       });
     });
 
+    socketInstance.on('alert:new', (payload: any) => {
+      addNotification({
+        id: String(payload.id || Math.random()),
+        title: payload.title || 'New Notification',
+        message: payload.message || '',
+        type: (payload.type || '').toLowerCase().includes('order')
+          ? 'order'
+          : (payload.type || '').toLowerCase().includes('stock')
+          ? 'inventory'
+          : (payload.type || '').toLowerCase().includes('billing')
+          ? 'billing'
+          : 'order',
+        timestamp: payload.createdAt || new Date().toISOString(),
+      });
+    });
+
     setSocket(socketInstance);
 
     return () => {
@@ -215,15 +232,30 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
   const addNotification = (notif: SocketNotification) => {
     setNotifications((prev) => [notif, ...prev.slice(0, 9)]);
+    setLatestPopup(notif);
+  };
+
+  const clearLatestPopup = () => {
+    setLatestPopup(null);
   };
 
   const clearNotifications = () => {
     setNotifications([]);
     ApiClient.patch('/notifications/read-all', {}).catch(() => {});
+    ApiClient.patch('/notifications/seen-all', {}).catch(() => {});
   };
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected, notifications, clearNotifications }}>
+    <SocketContext.Provider
+      value={{
+        socket,
+        isConnected,
+        notifications,
+        clearNotifications,
+        latestPopup,
+        clearLatestPopup,
+      }}
+    >
       {children}
     </SocketContext.Provider>
   );

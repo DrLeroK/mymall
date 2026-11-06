@@ -47,6 +47,11 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
               -{discountPercent}%
             </span>
           )}
+          {images.length > 1 && (
+            <span className="px-2 py-0.5 rounded-lg bg-black/60 text-white font-bold text-[10px] backdrop-blur-xs shadow-sm">
+              {images.length} photos
+            </span>
+          )}
           {isOutOfStock ? (
             <Badge variant="danger" size="sm">
               Out of Stock
@@ -69,9 +74,16 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
       {/* Content */}
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
-          {/* Store / Category link */}
+          {/* Store / Category / Brand line */}
           <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-semibold mb-1">
-            <span>{product.category?.name || 'General'}</span>
+            <div className="flex items-center gap-1.5 truncate">
+              {product.brand && (
+                <span className="px-1.5 py-0.5 rounded bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-300 font-extrabold text-[10px] uppercase tracking-wider">
+                  {product.brand}
+                </span>
+              )}
+              <span className="text-[11px] text-slate-500">{product.category?.name || 'General'}</span>
+            </div>
             {product.store && (
               <span className="text-brand-600 dark:text-brand-400 font-bold truncate max-w-[120px]">
                 {product.store.name}

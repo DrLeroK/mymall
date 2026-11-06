@@ -26,16 +26,22 @@ import {
   HelpCircle,
   Info,
   Star,
+  CheckCircle2,
+  CreditCard,
+  Package,
+  TrendingUp,
 } from 'lucide-react';
 
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, role, staffRole, isAuthenticated, logout } = useAuth();
+  const { user, role, staffRole, storeId, isAuthenticated, logout, switchActiveStore } = useAuth();
   const { itemCount } = useCart();
   const { t } = useI18n();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [storeDropdownOpen, setStoreDropdownOpen] = useState(false);
+  const [isSwitchingStore, setIsSwitchingStore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const isActive = (href: string) => {
@@ -43,20 +49,13 @@ export function Navbar() {
     return pathname.startsWith(href);
   };
 
-  const navLinks = [
+  const navLinks: { href: string; label: string; icon?: any }[] = [
     { href: '/', label: 'Home' },
     { href: '/explore', label: t('nav.explore') || 'Explore Stores' },
-    { href: '/reviews', label: 'Reviews', icon: Star },
+    { href: '/reviews', label: 'Reviews' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
   ];
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/explore?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
 
   // Determine user's specific dashboard URL and title
   const getDashboardDetails = () => {
@@ -67,6 +66,16 @@ export function Navbar() {
       return { href: '/merchant', title: 'Merchant Center', icon: Store, color: 'text-brand-600 bg-brand-500/10 border-brand-500/30' };
     }
     if (role === 'STORE_STAFF') {
+      const perms = user?.permissions || [];
+      if (staffRole === 'MANAGER') {
+        return { href: '/merchant', title: 'Management Hub', icon: Store, color: 'text-brand-600 bg-brand-500/10 border-brand-500/30' };
+      }
+      if (perms.includes('manage_inventory') || staffRole === 'INVENTORY_CLERK') {
+        return { href: '/merchant/products', title: 'Inventory & Stock', icon: Package, color: 'text-brand-600 bg-brand-500/10 border-brand-500/30' };
+      }
+      if (staffRole === 'ACCOUNTANT' && !perms.includes('access_pos')) {
+        return { href: '/merchant/accounting', title: 'Accounting Desk', icon: CreditCard, color: 'text-violet-600 bg-violet-500/10 border-violet-500/30' };
+      }
       return { href: '/pos', title: 'POS Register', icon: Terminal, color: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/30' };
     }
     return { href: '/customer', title: 'My Account', icon: User, color: 'text-sky-600 bg-sky-500/10 border-sky-500/30' };
@@ -93,21 +102,6 @@ export function Navbar() {
               </span>
             </div>
           </Link>
-
-          {/* Search Bar */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="hidden md:flex flex-1 max-w-sm relative"
-          >
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('nav.searchPlaceholder')}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 focus:border-brand-500 dark:focus:border-brand-500 focus:bg-white dark:focus:bg-slate-900 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium"
-            />
-          </form>
 
           {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center gap-1.5 text-sm font-bold">
@@ -165,6 +159,62 @@ export function Navbar() {
               </Link>
             </div>
 
+            {/* Multi-Store Context Switcher for Staff / Merchants */}
+            {isAuthenticated && user?.availableStores && user.availableStores.length > 1 && (
+              <div className="relative">
+                <button
+                  onClick={() => setStoreDropdownOpen(!storeDropdownOpen)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-brand-500/30 bg-brand-50/60 dark:bg-brand-950/40 text-xs font-bold text-brand-700 dark:text-brand-300 hover:bg-brand-100/70 dark:hover:bg-brand-900/50 transition-all shadow-sm"
+                  title="Switch Active Working Store"
+                >
+                  <Store className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />
+                  <span className="hidden sm:inline max-w-[100px] truncate">
+                    {user.availableStores.find((s) => s.storeId === storeId)?.storeName || 'Switch Store'}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-brand-400" />
+                </button>
+
+                {storeDropdownOpen && (
+                  <div
+                    className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl p-2 z-50 animate-in fade-in slide-in-from-top-2"
+                    onMouseLeave={() => setStoreDropdownOpen(false)}
+                  >
+                    <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Switch Active Store
+                    </div>
+                    <div className="py-1 space-y-1 max-h-60 overflow-y-auto">
+                      {user.availableStores.map((s) => {
+                        const isCurrent = s.storeId === storeId;
+                        return (
+                          <button
+                            key={s.storeId}
+                            disabled={isCurrent || isSwitchingStore}
+                            onClick={async () => {
+                              setIsSwitchingStore(true);
+                              await switchActiveStore(s.storeId);
+                              setIsSwitchingStore(false);
+                              setStoreDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between p-2 rounded-xl text-xs text-left transition-all ${
+                              isCurrent
+                                ? 'bg-brand-500/10 text-brand-600 dark:text-brand-400 font-black'
+                                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            <div className="min-w-0 pr-2">
+                              <p className="font-bold truncate">{s.storeName}</p>
+                              <p className="text-[10px] text-slate-400 capitalize">{s.role.toLowerCase()}</p>
+                            </div>
+                            {isCurrent && <CheckCircle2 className="w-4 h-4 text-brand-500 flex-shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* User Dropdown / Auth CTA */}
             {isAuthenticated ? (
               <div className="relative ml-1">
@@ -195,7 +245,9 @@ export function Navbar() {
                         {user?.email}
                       </p>
                       <span className="inline-block px-2 py-0.5 mt-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 font-extrabold text-[9px] uppercase tracking-wider">
-                        {role.replace('_', ' ')}
+                        {role === 'STORE_STAFF' && staffRole
+                          ? `${staffRole.replace('_', ' ')} • ${user?.availableStores?.find((s) => s.storeId === storeId)?.storeName || 'Store Staff'}`
+                          : role.replace('_', ' ')}
                       </span>
                     </div>
 
@@ -209,13 +261,59 @@ export function Navbar() {
                         <span>Go to {dashboard.title}</span>
                       </Link>
 
+                      {/* Staff Cross-Functional Workspace Shortcuts */}
+                      {role === 'STORE_STAFF' && (
+                        <>
+                          {(user?.permissions?.includes('manage_inventory') || staffRole === 'INVENTORY_CLERK') && dashboard.href !== '/merchant/products' && (
+                            <Link
+                              href="/merchant/products"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <Package className="w-4 h-4 text-brand-500" />
+                              <span>Products & Stock</span>
+                            </Link>
+                          )}
+                          {staffRole === 'MANAGER' && dashboard.href !== '/merchant' && (
+                            <Link
+                              href="/merchant"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <Store className="w-4 h-4 text-slate-400" />
+                              <span>Manager Overview</span>
+                            </Link>
+                          )}
+                          {user?.permissions?.includes('manage_orders') && dashboard.href !== '/merchant/orders' && (
+                            <Link
+                              href="/merchant/orders"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <ShoppingCart className="w-4 h-4 text-brand-500" />
+                              <span>Store Orders</span>
+                            </Link>
+                          )}
+                          {(user?.permissions?.includes('access_pos') || staffRole === 'CASHIER' || staffRole === 'MANAGER') && dashboard.href !== '/pos' && (
+                            <Link
+                              href="/pos"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <Terminal className="w-4 h-4 text-emerald-500" />
+                              <span>POS Register</span>
+                            </Link>
+                          )}
+                        </>
+                      )}
+
                       <Link
                         href="/customer"
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                       >
-                        <ShoppingBag className="w-4 h-4 text-slate-400" />
-                        <span>My Orders & Addresses</span>
+                        <ShoppingBag className="w-4 h-4 text-brand-500" />
+                        <span>My Personal Purchases & Orders</span>
                       </Link>
                     </div>
 
@@ -302,18 +400,6 @@ export function Navbar() {
                 </div>
               </div>
             </div>
-
-            {/* Mobile Search */}
-            <form onSubmit={handleSearchSubmit} className="relative">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('nav.searchPlaceholder')}
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700"
-              />
-            </form>
             <div className="flex flex-col gap-1.5 text-sm font-bold">
               {navLinks.map((link) => {
                 const active = isActive(link.href);

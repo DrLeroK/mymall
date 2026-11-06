@@ -18,6 +18,7 @@ interface AuthContextType {
     name: string;
     phone?: string;
     role?: Role;
+    otp?: string;
   }) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -25,6 +26,7 @@ interface AuthContextType {
   sendOtp: (email: string) => Promise<{ success: boolean; message: string; devOtp?: string }>;
   verifyOtp: (email: string, otp: string) => Promise<{ success: boolean; message: string }>;
   chooseRole: (targetRole: 'STORE_OWNER' | 'CUSTOMER') => Promise<boolean>;
+  switchActiveStore: (targetStoreId: number) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -84,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     name: string;
     phone?: string;
     role?: Role;
+    otp?: string;
   }) => {
     try {
       const res = await ApiClient.post('/auth/register', payload);
@@ -130,6 +133,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.success && res.tokens) {
         ApiClient.setTokens(res.tokens.accessToken, res.tokens.refreshToken);
         await refreshUser();
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const switchActiveStore = async (targetStoreId: number) => {
+    try {
+      const res = await ApiClient.post('/staff/switch-store', { storeId: targetStoreId, targetStoreId });
+      if (res.success && res.tokens) {
+        ApiClient.setTokens(res.tokens.accessToken, res.tokens.refreshToken);
+        if (res.user) {
+          setUser(res.user);
+          localStorage.setItem('mymall_user', JSON.stringify(res.user));
+        } else {
+          await refreshUser();
+        }
         return true;
       }
       return false;
@@ -195,6 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sendOtp,
         verifyOtp,
         chooseRole,
+        switchActiveStore,
       }}
     >
       {children}

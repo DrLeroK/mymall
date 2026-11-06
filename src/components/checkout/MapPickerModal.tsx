@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from 'next-themes';
-import { MapPin, Search, X, Check, Crosshair, Loader2 } from 'lucide-react';
+import { MapPin, Search, X, Check, Crosshair, Loader2, Layers, Compass, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 interface MapPickerModalProps {
@@ -32,7 +32,14 @@ const POPULAR_LOCATIONS = [
 ];
 
 const MAPBOX_TOKEN =
-  process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+  process.env.MAPBOX_TOKEN ||
+  process.env.NEXT_PUBLIC_MAPBOX_TOKEN ||
+  '';
+
+const MAPBOX_GEOCODING_URL =
+  process.env.MAPBOX_GEOCODING_URL ||
+  process.env.NEXT_PUBLIC_MAPBOX_GEOCODING_URL ||
+  'https://api.mapbox.com/geocoding/v5/mapbox.places';
 
 declare global {
   interface Window {
@@ -59,10 +66,52 @@ export function MapPickerModal({
   const [isSearching, setIsSearching] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isMapboxLoaded, setIsMapboxLoaded] = useState(false);
+  const [mapMode, setMapMode] = useState<'streets' | 'satellite'>('streets');
+  const [isLocatingUser, setIsLocatingUser] = useState(false);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerInstanceRef = useRef<any>(null);
+
+  const handleToggleMapMode = () => {
+    const nextMode = mapMode === 'streets' ? 'satellite' : 'streets';
+    setMapMode(nextMode);
+    if (mapInstanceRef.current) {
+      const styleUrl =
+        nextMode === 'satellite'
+          ? 'mapbox://styles/mapbox/satellite-streets-v12'
+          : (isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12');
+      mapInstanceRef.current.setStyle(styleUrl, { diff: false });
+    }
+  };
+
+  const handleLocateMe = () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    setIsLocatingUser(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = Number(pos.coords.latitude.toFixed(5));
+        const lng = Number(pos.coords.longitude.toFixed(5));
+        setCoords({ lat, lng });
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.flyTo({ center: [lng, lat], zoom: 16, essential: true });
+        }
+        if (markerInstanceRef.current) {
+          markerInstanceRef.current.setLngLat([lng, lat]);
+        }
+        reverseGeocode(lat, lng);
+        setIsLocatingUser(false);
+      },
+      (err) => {
+        console.warn('Geolocation error:', err);
+        setIsLocatingUser(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
 
   // Sync initial props
   useEffect(() => {
@@ -112,7 +161,7 @@ export function MapPickerModal({
     setIsGeocoding(true);
     try {
       const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&types=poi,address,neighborhood,locality,place`
+        `${MAPBOX_GEOCODING_URL}/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&types=poi,address,neighborhood,locality,place`
       );
       if (res.ok) {
         const data = await res.json();
@@ -157,7 +206,7 @@ export function MapPickerModal({
 
       try {
         const res = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+          `${MAPBOX_GEOCODING_URL}/${encodeURIComponent(
             searchQuery
           )}.json?access_token=${MAPBOX_TOKEN}&country=ET&proximity=38.7578,8.9806&limit=5`
         );
@@ -197,7 +246,12 @@ export function MapPickerModal({
     const mapboxgl = window.mapboxgl;
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    const mapStyle = isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12';
+    const mapStyle =
+      mapMode === 'satellite'
+        ? 'mapbox://styles/mapbox/satellite-streets-v12'
+        : isDark
+        ? 'mapbox://styles/mapbox/dark-v11'
+        : 'mapbox://styles/mapbox/streets-v12';
 
     // Cleanup previous instance
     if (mapInstanceRef.current) {
@@ -439,6 +493,33 @@ export function MapPickerModal({
             <div className="absolute top-2.5 left-2.5 z-10 bg-slate-900/85 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl backdrop-blur-md flex items-center gap-1.5 shadow-lg border border-slate-700/60 pointer-events-none">
               <Crosshair className="w-3.5 h-3.5 text-rose-400 animate-spin" style={{ animationDuration: '6s' }} />
               <span>Click map or drag the pin to set spot</span>
+            </div>
+
+            {/* Floating Map Controls (Layer Switcher & GPS Locate) */}
+            <div className="absolute top-2.5 right-12 z-10 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleToggleMapMode}
+                className="px-2.5 py-1.5 rounded-xl bg-slate-900/90 text-white hover:bg-slate-800 text-[11px] font-bold backdrop-blur-md shadow-lg border border-slate-700/60 flex items-center gap-1.5 transition-all"
+                title="Toggle Satellite Imagery vs Streets"
+              >
+                <Layers className="w-3.5 h-3.5 text-rose-400" />
+                <span className="capitalize">{mapMode === 'satellite' ? 'Streets' : 'Satellite'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleLocateMe}
+                disabled={isLocatingUser}
+                className="px-2.5 py-1.5 rounded-xl bg-slate-900/90 text-white hover:bg-slate-800 text-[11px] font-bold backdrop-blur-md shadow-lg border border-slate-700/60 flex items-center gap-1.5 transition-all disabled:opacity-50"
+                title="Find My GPS Location"
+              >
+                {isLocatingUser ? (
+                  <Loader2 className="w-3.5 h-3.5 text-rose-400 animate-spin" />
+                ) : (
+                  <Navigation className="w-3.5 h-3.5 text-rose-400" />
+                )}
+                <span>Locate Me</span>
+              </button>
             </div>
 
             {/* Reverse Geocoding Loading Indicator */}

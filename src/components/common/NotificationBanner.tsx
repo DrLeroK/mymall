@@ -10,10 +10,18 @@ export function NotificationBanner() {
 
   const latest = notifications[0];
 
+  const handleDismiss = (id: string) => {
+    setDismissedId(id);
+    try {
+      const { ApiClient } = require('@/lib/api');
+      ApiClient.patch('/notifications/seen-all', {}).catch(() => {});
+    } catch {}
+  };
+
   useEffect(() => {
     if (latest && latest.id !== dismissedId) {
       const timer = setTimeout(() => {
-        setDismissedId(latest.id);
+        handleDismiss(latest.id);
       }, 7000);
       return () => clearTimeout(timer);
     }
@@ -40,7 +48,7 @@ export function NotificationBanner() {
               {latest.title}
             </h5>
             <button
-              onClick={() => setDismissedId(latest.id)}
+              onClick={() => handleDismiss(latest.id)}
               className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
             >
               <X className="w-3.5 h-3.5" />

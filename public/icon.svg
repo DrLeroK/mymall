@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#0e7490" />
+      <stop offset="100%" stop-color="#090e17" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+  <!-- Rounded Base Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  
+  <!-- Outer Store Bag / Geometry Silhouette -->
+  <path d="M156 180 C156 120 200 80 256 80 C312 80 356 120 356 180" fill="none" stroke="url(#accentGrad)" stroke-width="28" stroke-linecap="round" />
+  
+  <!-- Modern Stylized 'M' Shopping Bag Body -->
+  <path d="M116 190 H396 L376 424 C374 436 364 444 352 444 H160 C148 444 138 436 136 424 Z" fill="#090e17" fill-opacity="0.6" stroke="url(#accentGrad)" stroke-width="16" stroke-linejoin="round" />
+  
+  <!-- Stylized Geometric M in Center -->
+  <path d="M176 380 L176 240 L256 320 L336 240 L336 380" fill="none" stroke="url(#accentGrad)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Ethiopian Gold Sparkle Accent -->
+  <circle cx="360" cy="148" r="16" fill="url(#goldGrad)" />
+</svg>

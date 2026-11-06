@@ -8,7 +8,7 @@ import { useI18n } from '@/context/I18nContext';
 import { Role } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Store, ShoppingBag, CheckCircle2, ArrowRight, Mail } from 'lucide-react';
+import { Store, ShoppingBag, CheckCircle2, ArrowRight, Mail, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const { t } = useI18n();
@@ -21,8 +21,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('+251 9');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [otpCode, setOtpCode] = useState('');
-  const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,6 @@ export default function RegisterPage() {
 
     const res = await sendOtp(email);
     if (res.success) {
-      if (res.devOtp) setDevOtpHint(res.devOtp);
       setStep('OTP');
     } else {
       setError(res.message || 'Failed to send OTP verification code');
@@ -71,6 +70,7 @@ export default function RegisterPage() {
       phone,
       password,
       role,
+      otp: otpCode,
     });
 
     if (regRes.success) {
@@ -173,10 +173,20 @@ export default function RegisterPage() {
 
               <Input
                 label={t('auth.password')}
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 chars with number & uppercase"
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors focus:outline-none"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                }
                 required
               />
 
@@ -197,11 +207,6 @@ export default function RegisterPage() {
                 <p className="text-xs text-slate-600 dark:text-slate-300">
                   {t('auth.otpDescription')}
                 </p>
-                {devOtpHint && (
-                  <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 text-amber-700 dark:text-amber-300 text-xs font-mono font-bold">
-                    Dev Mode Code: {devOtpHint}
-                  </div>
-                )}
               </div>
 
               <Input
@@ -238,11 +243,19 @@ export default function RegisterPage() {
           )}
         </div>
 
-        <div className="text-center text-xs text-slate-500">
-          <span>{t('auth.alreadyHaveAccount')} </span>
-          <Link href="/login" className="font-bold text-brand-600 dark:text-brand-400 hover:underline">
-            {t('nav.login')}
-          </Link>
+        <div className="text-center text-xs text-slate-500 space-y-1">
+          <div>
+            <span>{t('auth.alreadyHaveAccount')} </span>
+            <Link href="/login" className="font-bold text-brand-600 dark:text-brand-400 hover:underline">
+              {t('nav.login')}
+            </Link>
+          </div>
+          <div>
+            <span>Invited to join a store team? </span>
+            <Link href="/staff/accept" className="font-bold text-amber-600 dark:text-amber-400 hover:underline">
+              Accept Staff Invite
+            </Link>
+          </div>
         </div>
       </div>
     </div>

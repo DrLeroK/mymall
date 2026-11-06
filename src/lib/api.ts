@@ -1,7 +1,7 @@
 import { safeStorage, isValidJwt, isJwtExpired, validateUploadedFile } from '@/lib/security';
 
 export function getApiBaseUrl(): string {
-  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  const envUrl = process.env.BACK_API_URL || process.env.NEXT_PUBLIC_API_URL;
   if (envUrl && envUrl.trim().length > 0) {
     return envUrl.replace(/\/+$/, '');
   }
