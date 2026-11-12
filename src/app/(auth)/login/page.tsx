@@ -156,7 +156,8 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* Seed Demo Credentials */}
+          {/* Seed Demo Credentials - Commented Out */}
+          {/*
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
             <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
               <span className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400">
@@ -294,6 +295,7 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
+          */}
         </div>
 
         <div className="text-center text-xs font-medium text-slate-600 dark:text-slate-400">
